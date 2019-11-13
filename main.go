@@ -4,43 +4,66 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/http"
 
-	"github.com/gorilla/mux"
+	"golang.org/x/crypto/ssh"
 )
 
-var instanceURL = "http://ec2-18-224-140-238.us-east-2.compute.amazonaws.com/"
-var fromRemote = "Unchanged from remote"
+var remoteUser, remoteHost string
 
 func main() {
-	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/", homeLink)
-	router.HandleFunc("/event", getEvent)
-	router.HandleFunc("/response", gotEvent)
-	log.Fatal(http.ListenAndServe(":80", router))
+	var out []byte
+	out = executeCommand("go run main.go")
+	fmt.Println("output from remote go program:", string(out))
 }
+func executeCommand(cmd string) []byte {
+	//connect to remote host
+	connection, session := connect()
+	// execute go program on remote host and get its combined standard output and standard error
+	out, _ := session.CombinedOutput(cmd)
 
-func homeLink(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Home!")
+	defer connection.Close()
+	defer session.Close()
+	return out
 }
-
-func getEvent(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Getting an Event!")
-	req, er0 := http.NewRequest("GET", instanceURL, nil)
-	if er0 != nil {
-		log.Fatal(er0)
+func connect() (*ssh.Client, *ssh.Session) {
+	var port = "22"
+	if remoteUser == "" {
+		fmt.Print("remoteUser: ")
+		fmt.Scan(&remoteUser)
+		fmt.Print("remoteHost: ")
+		fmt.Scan(&remoteHost)
 	}
-	res, er1 := http.DefaultClient.Do(req)
-	if er1 != nil {
-		log.Fatal(er1)
+	// get key
+	key, err := ioutil.ReadFile("./ec2.pem")
+	if err != nil {
+		log.Fatalf("unable to read key: %v", err)
+	}
+	signer, err := ssh.ParsePrivateKey(key)
+	if err != nil {
+		log.Fatalf("unable to parse key: %v", err)
 	}
 
-	defer res.Body.Close()
-	fromRemote, _ := ioutil.ReadAll(res.Body)
+	// configure authentication
+	sshConfig := &ssh.ClientConfig{
+		User: remoteUser,
+		Auth: []ssh.AuthMethod{
+			ssh.PublicKeys(signer),
+		},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	}
 
-	log.Println(fromRemote)
-}
+	// start a client connection to SSH server
+	connection, err := ssh.Dial("tcp", remoteHost+":"+port, sshConfig)
+	if err != nil {
+		connection.Close()
+		panic(err)
+	}
+	// create session
+	session, err := connection.NewSession()
+	if err != nil {
+		session.Close()
+		panic(err)
+	}
 
-func gotEvent(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, fromRemote)
+	return connection, session
 }
