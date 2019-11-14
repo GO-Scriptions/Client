@@ -1,69 +1,23 @@
 package main
 
 import (
-	"fmt"
-	"io/ioutil"
-	"log"
+	"net/http"
 
-	"golang.org/x/crypto/ssh"
+	"github.com/GO-Scriptions/Client/web"
 )
 
 var remoteUser, remoteHost string
 
 func main() {
-	var out []byte
-	out = executeCommand("go run main.go")
-	fmt.Println("output from remote go program:", string(out))
-}
-func executeCommand(cmd string) []byte {
-	//connect to remote host
-	connection, session := connect()
-	// execute go program on remote host and get its combined standard output and standard error
-	out, _ := session.CombinedOutput(cmd)
-
-	defer connection.Close()
-	defer session.Close()
-	return out
-}
-func connect() (*ssh.Client, *ssh.Session) {
-	var port = "22"
-	if remoteUser == "" {
-		fmt.Print("remoteUser: ")
-		fmt.Scan(&remoteUser)
-		fmt.Print("remoteHost: ")
-		fmt.Scan(&remoteHost)
-	}
-	// get key
-	key, err := ioutil.ReadFile("./ec2.pem")
-	if err != nil {
-		log.Fatalf("unable to read key: %v", err)
-	}
-	signer, err := ssh.ParsePrivateKey(key)
-	if err != nil {
-		log.Fatalf("unable to parse key: %v", err)
-	}
-
-	// configure authentication
-	sshConfig := &ssh.ClientConfig{
-		User: remoteUser,
-		Auth: []ssh.AuthMethod{
-			ssh.PublicKeys(signer),
-		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-	}
-
-	// start a client connection to SSH server
-	connection, err := ssh.Dial("tcp", remoteHost+":"+port, sshConfig)
-	if err != nil {
-		connection.Close()
-		panic(err)
-	}
-	// create session
-	session, err := connection.NewSession()
-	if err != nil {
-		session.Close()
-		panic(err)
-	}
-
-	return connection, session
+	// Sets up a file server in current directory
+	http.HandleFunc("/", web.Index)
+	http.HandleFunc("/doctorlogin", web.DocLog)
+	http.HandleFunc("/doctor", web.DocFunc)
+	http.HandleFunc("/patientlogin", web.PatLog)
+	http.HandleFunc("/patient", web.PatFunc)
+	http.HandleFunc("/employeelogin", web.PhaLog)
+	http.HandleFunc("/employee", web.PhaFunc)
+	http.HandleFunc("/stock", web.Stock)
+	http.HandleFunc("/prescription", web.Presc)
+	http.ListenAndServe(":9000", nil)
 }
