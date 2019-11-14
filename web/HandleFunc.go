@@ -3,6 +3,7 @@ package web
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"text/template"
 )
 
@@ -16,6 +17,7 @@ var loginInfo = LoginInfo{}
 
 // Index runs the index page
 func Index(response http.ResponseWriter, request *http.Request) {
+	loginInfo = LoginInfo{} //log out user if logged in
 	temp, _ := template.ParseFiles("html/index.html")
 	response.Header().Set("Content-Type", "text/html; charset=utf-8")
 	temp.Execute(response, nil)
@@ -48,7 +50,7 @@ func DocLog(response http.ResponseWriter, request *http.Request) {
 
 	if dbResponse == "true" {
 		loginInfo.Doctor = true
-		loginInfo.Username = uname
+		loginInfo.Username = uname // change http to doctor.html
 	} else {
 		loginInfo.Doctor = false
 		loginInfo.Username = uname
@@ -56,11 +58,30 @@ func DocLog(response http.ResponseWriter, request *http.Request) {
 	temp.Execute(response, loginInfo)
 }
 
-// DocFunc HTTP Handler for after Doctor logs in
+// DocFunc HTTP Handler for after Doctor logs in NEW AND UNTESTED
 func DocFunc(response http.ResponseWriter, request *http.Request) {
-	temp, _ := template.ParseFiles("html/doctor.html")
-	response.Header().Set("Content-Type", "text/html; charset=utf-8")
-	temp.Execute(response, nil)
+	temp, _ := template.ParseFiles("doctor.html")
+	var cmd, db_response string
+	fname := request.FormValue("fname")
+	lname := request.FormValue("lname")
+	amount := request.FormValue("amount")
+	prescription := request.FormValue("prescription")
+	// go run main.go
+	cmd += "/usr/local/go/bin/go run main.go --doc"
+	// add command line arguments
+	cmd += fname
+	cmd += " "
+	cmd += lname
+	cmd += " "
+	cmd += amount
+	cmd += " "
+	cmd += prescription
+	fmt.Println("command:", cmd)
+	// get database response
+	db_response = ExecuteCommand(cmd) //
+	db_response = strings.TrimSpace(db_response)
+	fmt.Println("db response:", db_response)
+	temp.Execute(response, loginInfo)
 }
 
 // PatLog HTTP Handler for Patient Login
