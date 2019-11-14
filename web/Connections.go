@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"strings"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -71,22 +72,11 @@ func getKey() ssh.Signer {
 	return signer
 }
 
-func genLogin(flagToPass string, username string, password string) {
-	signer := getKey()
-
-	cmd := "go run main.go"
-	switch flagToPass {
-	case "d":
-		cmd = cmd + " -d" + username + password
-	case "p":
-		cmd = cmd + " -p" + username + password
-	case "e":
-		cmd = cmd + " -e" + username + password
-	default:
-		cmd = cmd + " -p" + username + password
-	}
+func genLogin(cmd string) string {
+	var response string
 
 	// configure authentication
+	signer := getKey()
 	sshConfig := &ssh.ClientConfig{
 		User: remoteUser,
 		Auth: []ssh.AuthMethod{
@@ -108,9 +98,14 @@ func genLogin(flagToPass string, username string, password string) {
 		log.Fatal("Unable to connect to host:", err1)
 	}
 
-	out, _ := session.CombinedOutput(cmd)
-	fmt.Println(out)
+	out, err2 := session.CombinedOutput(cmd)
+	if err2 != nil {
+		log.Fatal("Unable to combine output:", err2)
+	}
+
+	response = strings.TrimSpace(string(out))
 
 	defer connection.Close()
 	defer session.Close()
+	return response
 }

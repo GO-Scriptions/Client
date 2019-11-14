@@ -3,9 +3,16 @@ package web
 import (
 	"fmt"
 	"net/http"
-	"os/exec"
 	"text/template"
 )
+
+//LoginInfo structure to save your username and occupation
+type LoginInfo struct {
+	Username string
+	Doctor   bool
+}
+
+var loginInfo = LoginInfo{}
 
 // Index runs the index page
 func Index(response http.ResponseWriter, request *http.Request) {
@@ -18,34 +25,35 @@ func Index(response http.ResponseWriter, request *http.Request) {
 
 // DocLog HTTP Handler for Doctor Login
 func DocLog(response http.ResponseWriter, request *http.Request) {
+	var cmd, dbResponse string
+
 	temp, _ := template.ParseFiles("html/doctorlogin.html")
 	response.Header().Set("Content-Type", "text/html; charset=utf-8")
 	temp.Execute(response, nil)
+
 	//values of form text boxes
-	fname := request.FormValue("fname")
-	lname := request.FormValue("lname")
+	uname := request.FormValue("uname")
 	dpass := request.FormValue("dpass")
-	//dsubmit := request.FormValue("dsubmit")		//don't know how to get it to run only when submit is pressed
-	if fname == "Bob" && lname == "Builder" && dpass == "yes" { //change to compare to database
-		fmt.Println("Welcome", fname, lname)   //just for testing
-		fmt.Println("Your password is", dpass) //just for testing
-		//fmt.Println(dsubmit)
 
-		//add flags to make it check the Doctors table for user info in this case --doc........will need to change this code for other machines
-		syst, err := exec.Command("ssh", "user1@192.168.56.102", "cd", "test", ";", "go", "run", "main.go", "--doc").Output()
-		if err != nil {
-			fmt.Println(err)
-		}
-		result := string(syst)
-		fmt.Println(result)
+	// cmd0 cd into directory
+
+	cmd = "/usr/local/go/bin/go run main.go --log d"
+	cmd += uname
+	cmd += " "
+	cmd += dpass
+	fmt.Println("command:", cmd)
+
+	dbResponse = genLogin(cmd)
+	fmt.Println("db response:", dbResponse)
+
+	if dbResponse == "true" {
+		loginInfo.Doctor = true
+		loginInfo.Username = uname
 	} else {
-		fmt.Println("wrong") //just for testing
-		//fmt.Println(dsubmit)
-
-		//trying to print out when invalid info is entered
-		//t, err := template.New("foo").Parse(`{{define "T"}}Hello, {{.}}!{{end}}`)
-		//err = t.ExecuteTemplate(out, "T", "<script>alert('your information was incorrect please try again')</script>")
+		loginInfo.Doctor = false
+		loginInfo.Username = uname
 	}
+	temp.Execute(response, loginInfo)
 }
 
 // DocFunc HTTP Handler for after Doctor logs in
