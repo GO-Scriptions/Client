@@ -46,7 +46,7 @@ func firstConnect() string {
 	}
 
 	out, _ := session.CombinedOutput("go run main.go")
-	if string(out) == "Hello World" {
+	if string(out) == "No Flags Passed" {
 		status = "healthy"
 	} else {
 		status = "unhealthy"
