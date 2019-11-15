@@ -67,7 +67,7 @@ func DocFunc(response http.ResponseWriter, request *http.Request) {
 	amount := request.FormValue("amount")
 	prescription := request.FormValue("prescription")
 	// go run main.go
-	cmd += "/usr/local/go/bin/go run main.go --doc"
+	cmd += "/usr/local/go/bin/go run main.go --doc wp"
 	// add command line arguments
 	cmd += fname
 	cmd += " "
@@ -78,7 +78,7 @@ func DocFunc(response http.ResponseWriter, request *http.Request) {
 	cmd += prescription
 	fmt.Println("command:", cmd)
 	// get database response
-	db_response = ExecuteCommand(cmd) //
+	db_response = ExecuteCommand(cmd)
 	db_response = strings.TrimSpace(db_response)
 	fmt.Println("db response:", db_response)
 	temp.Execute(response, loginInfo)

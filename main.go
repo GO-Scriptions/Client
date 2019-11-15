@@ -19,5 +19,6 @@ func main() {
 	http.HandleFunc("/employee", web.PhaFunc)
 	http.HandleFunc("/stock", web.Stock)
 	http.HandleFunc("/prescription", web.Presc)
+	http.HandleFunc("/Addp", web.Addp) //untested
 	http.ListenAndServe(":80", nil)
 }
