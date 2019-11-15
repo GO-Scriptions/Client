@@ -108,7 +108,7 @@ func Docpres(response http.ResponseWriter, request *http.Request) {
 	dbResponse = web.ExecuteCommand(cmd)
 	dbResponse = strings.TrimSpace(dbResponse)
 	fmt.Println("db response:", dbResponse)
-	temp.Execute(response, loginInfo)
+	temp.Execute(response, dbResponse) //changed loginInfo to dbResponse
 }
 
 // PhaLog HTTP Handler for Pharmasicst Login
