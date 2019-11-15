@@ -21,7 +21,7 @@ func Index(response http.ResponseWriter, request *http.Request) {
 	temp, _ := template.ParseFiles("index.html")
 	response.Header().Set("Content-Type", "text/html; charset=utf-8")
 	temp.Execute(response, nil)
-	connection := firstConnect()
+	connection := FirstConnect()
 	fmt.Println(connection)
 }
 
@@ -45,7 +45,7 @@ func DocLog(response http.ResponseWriter, request *http.Request) {
 	cmd += dpass
 	fmt.Println("command:", cmd)
 
-	dbResponse = genLogin(cmd)
+	dbResponse = GenLogin(cmd)
 	fmt.Println("db response:", dbResponse)
 
 	if dbResponse == "true" {

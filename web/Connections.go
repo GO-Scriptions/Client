@@ -11,7 +11,7 @@ import (
 
 var remoteUser, remoteHost, port = "ubuntu", "ip", "22"
 
-func firstConnect() string {
+func FirstConnect() string {
 	var status string
 
 	if remoteUser == "" {
@@ -72,7 +72,7 @@ func getKey() ssh.Signer {
 	return signer
 }
 
-func genLogin(cmd string) string {
+func GenLogin(cmd string) string {
 	var response string
 
 	// configure authentication
