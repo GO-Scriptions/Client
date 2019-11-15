@@ -26,10 +26,17 @@ func main() {
 
 //moved over from handlefunc.go ///////////////////////////////////
 
-//LoginInfo structure to save your username and occupation
+//LoginInfo structure to save your username as a doctor
 type LoginInfo struct {
 	Username string
 	Doctor   bool
+}
+
+//ELoginInfo structure to save your username and if your a manager
+type ELoginInfo struct {
+	Username string
+	Real     bool
+	Manager  bool
 }
 
 //Prescription is new and untested should be a struct that stores Prescription information
@@ -38,10 +45,12 @@ type Prescription struct {
 }
 
 var loginInfo = LoginInfo{}
+var eloginInfo = ELoginInfo{}
 
 // Index runs the index page
 func Index(response http.ResponseWriter, request *http.Request) {
-	loginInfo = LoginInfo{} //log out user if logged in
+	loginInfo = LoginInfo{}   //log out user if logged in
+	eloginInfo = ELoginInfo{} //log out user if logged in
 	temp, _ := template.ParseFiles("web/index.html")
 	response.Header().Set("Content-Type", "text/html; charset=utf-8")
 	temp.Execute(response, nil)
@@ -98,6 +107,8 @@ func Docpres(response http.ResponseWriter, request *http.Request) {
 	// go run main.go
 	cmd += "/usr/local/go/bin/go run main.go --doc wp "
 	// add command line arguments
+	cmd += loginInfo.Username //loginInfo uname
+	cmd += " "
 	cmd += fname
 	cmd += " "
 	cmd += lname
@@ -122,9 +133,39 @@ func PhaLog(response http.ResponseWriter, request *http.Request) {
 
 // PhaFunc HTTP Handler for after Pharmasicst logs in
 func PhaFunc(response http.ResponseWriter, request *http.Request) {
-	temp, _ := template.ParseFiles("employee.html")
-	response.Header().Set("Content-Type", "text/html; charset=utf-8")
-	temp.Execute(response, nil)
+	temp, _ := template.ParseFiles("web/employee.html")
+	var cmd, dbResponse string
+	//values of form text boxes
+	if loginInfo.Username == "" {
+		uname := request.FormValue("uname")
+		dpass := request.FormValue("dpass")
+
+		// cmd0 cd into directory
+
+		cmd = "/usr/local/go/bin/go run main.go --log p "
+		cmd += uname
+		cmd += " "
+		cmd += dpass
+		fmt.Println("command:", cmd)
+
+		dbResponse = web.GenLogin(cmd)
+		fmt.Println("db response:", dbResponse)
+
+		if dbResponse == "true false" { //should check to see if they are an employee and manager
+			eloginInfo.Real = true
+			eloginInfo.Manager = false
+			eloginInfo.Username = uname
+		} else if dbResponse == "true true" {
+			eloginInfo.Real = true
+			eloginInfo.Manager = true
+			eloginInfo.Username = uname
+		} else if dbResponse == "false false" {
+			eloginInfo.Real = false
+			eloginInfo.Manager = false
+			eloginInfo.Username = uname
+		}
+	}
+	temp.Execute(response, loginInfo)
 }
 
 // Stock HTTP Hander for restocking the pharamacy
@@ -143,14 +184,17 @@ func Presc(response http.ResponseWriter, request *http.Request) {
 	uname := request.FormValue("uname")
 	// cmd0 cd into directory
 
-	cmd = "/usr/local/go/bin/go run main.go --doc vp "
-	cmd += uname
-	fmt.Println("command:", cmd)
-
+	if loginInfo.Doctor == true { //should check if doctor or employee then act accordingly
+		cmd = "/usr/local/go/bin/go run main.go --doc vp "
+		cmd += uname
+		fmt.Println("command:", cmd)
+	} else if eloginInfo.Real == true {
+		cmd = "/usr/local/go/bin/go run main.go --pha v vp"
+		fmt.Println("command:", cmd)
+	}
 	dbResponse = web.ExecuteCommand(cmd)
 	dbResponse = strings.TrimSpace(dbResponse)
 	fmt.Println("dbResponse:", dbResponse)
-
 	//changes datatype
 	p := Prescription{PRES: make([]string, 1)}
 	length := 0
@@ -165,5 +209,5 @@ func Presc(response http.ResponseWriter, request *http.Request) {
 		}
 	}
 
-	temp.Execute(response, p)
+	temp.Execute(response, p) //need to empty struct after use
 }
