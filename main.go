@@ -11,11 +11,6 @@ import (
 
 var remoteUser, remoteHost string
 
-//Prescription is new and untested should be a struct that stores Prescription information
-type Prescription struct {
-	PRES []string
-}
-
 func main() {
 	// Sets up a file server in current directory
 	http.HandleFunc("/", Index)
@@ -35,6 +30,11 @@ func main() {
 type LoginInfo struct {
 	Username string
 	Doctor   bool
+}
+
+//Prescription is new and untested should be a struct that stores Prescription information
+type Prescription struct {
+	PRES []string
 }
 
 var loginInfo = LoginInfo{}
@@ -61,26 +61,28 @@ func DocFunc(response http.ResponseWriter, request *http.Request) {
 	temp, _ := template.ParseFiles("web/doctor.html")
 	var cmd, dbResponse string
 	//values of form text boxes
-	uname := request.FormValue("uname")
-	dpass := request.FormValue("dpass")
+	if loginInfo.Username == "" {
+		uname := request.FormValue("uname")
+		dpass := request.FormValue("dpass")
 
-	// cmd0 cd into directory
+		// cmd0 cd into directory
 
-	cmd = "/usr/local/go/bin/go run main.go --log d "
-	cmd += uname
-	cmd += " "
-	cmd += dpass
-	fmt.Println("command:", cmd)
+		cmd = "/usr/local/go/bin/go run main.go --log d "
+		cmd += uname
+		cmd += " "
+		cmd += dpass
+		fmt.Println("command:", cmd)
 
-	dbResponse = web.GenLogin(cmd)
-	fmt.Println("db response:", dbResponse)
+		dbResponse = web.GenLogin(cmd)
+		fmt.Println("db response:", dbResponse)
 
-	if dbResponse == "true" {
-		loginInfo.Doctor = true
-		loginInfo.Username = uname // change http to doctor.html
-	} else {
-		loginInfo.Doctor = false
-		loginInfo.Username = uname
+		if dbResponse == "true" {
+			loginInfo.Doctor = true
+			loginInfo.Username = uname // change http to doctor.html
+		} else {
+			loginInfo.Doctor = false
+			loginInfo.Username = uname
+		}
 	}
 	temp.Execute(response, loginInfo)
 }
@@ -108,7 +110,7 @@ func Docpres(response http.ResponseWriter, request *http.Request) {
 	dbResponse = web.ExecuteCommand(cmd)
 	dbResponse = strings.TrimSpace(dbResponse)
 	fmt.Println("db response:", dbResponse)
-	temp.Execute(response, dbResponse) //changed loginInfo to dbResponse
+	temp.Execute(response, nil) //changed loginInfo to nil, unsure if there needs to be something diffrent there
 }
 
 // PhaLog HTTP Handler for Pharmasicst Login
