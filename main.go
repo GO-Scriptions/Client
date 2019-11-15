@@ -26,7 +26,7 @@ func main() {
 	http.HandleFunc("/stock", Stock)
 	http.HandleFunc("/prescription", Presc)
 	http.HandleFunc("/docpres", Docpres)
-	http.ListenAndServe(":9000", nil)
+	http.ListenAndServe(":80", nil)
 }
 
 //moved over from handlefunc.go ///////////////////////////////////
