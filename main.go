@@ -11,6 +11,11 @@ import (
 
 var remoteUser, remoteHost string
 
+//Prescription is new and untested should be a struct that stores Prescription information
+type Prescription struct {
+	PRES []string
+}
+
 func main() {
 	// Sets up a file server in current directory
 	http.HandleFunc("/", Index)
@@ -24,7 +29,7 @@ func main() {
 	http.ListenAndServe(":9000", nil)
 }
 
-//moved over from handlefunc.go
+//moved over from handlefunc.go ///////////////////////////////////
 
 //LoginInfo structure to save your username and occupation
 type LoginInfo struct {
@@ -61,7 +66,7 @@ func DocFunc(response http.ResponseWriter, request *http.Request) {
 
 	// cmd0 cd into directory
 
-	cmd = "/usr/local/go/bin/go run main.go --log d"
+	cmd = "/usr/local/go/bin/go run main.go --log d "
 	cmd += uname
 	cmd += " "
 	cmd += dpass
@@ -83,13 +88,13 @@ func DocFunc(response http.ResponseWriter, request *http.Request) {
 //Docpres sends a new prescription to the database
 func Docpres(response http.ResponseWriter, request *http.Request) {
 	temp, _ := template.ParseFiles("web/docpres.html")
-	var cmd, db_response string
+	var cmd, dbResponse string
 	fname := request.FormValue("fname")
 	lname := request.FormValue("lname")
 	amount := request.FormValue("amount")
 	prescription := request.FormValue("prescription")
 	// go run main.go
-	cmd += "/usr/local/go/bin/go run main.go --doc wp"
+	cmd += "/usr/local/go/bin/go run main.go --doc wp "
 	// add command line arguments
 	cmd += fname
 	cmd += " "
@@ -100,9 +105,9 @@ func Docpres(response http.ResponseWriter, request *http.Request) {
 	cmd += prescription
 	fmt.Println("command:", cmd)
 	// get database response
-	db_response = web.ExecuteCommand(cmd)
-	db_response = strings.TrimSpace(db_response)
-	fmt.Println("db response:", db_response)
+	dbResponse = web.ExecuteCommand(cmd)
+	dbResponse = strings.TrimSpace(dbResponse)
+	fmt.Println("db response:", dbResponse)
 	temp.Execute(response, loginInfo)
 }
 
@@ -127,9 +132,36 @@ func Stock(response http.ResponseWriter, request *http.Request) {
 	temp.Execute(response, nil)
 }
 
-// Presc HTTP Handler for Pharmasicst to view prescriptions
+// Presc HTTP Handler to view prescriptions ///////////massively changed and untested
 func Presc(response http.ResponseWriter, request *http.Request) {
 	temp, _ := template.ParseFiles("prescription.html")
 	response.Header().Set("Content-Type", "text/html; charset=utf-8")
-	temp.Execute(response, nil)
+	var cmd, dbResponse string
+	//values of form text boxes
+	uname := request.FormValue("uname")
+	// cmd0 cd into directory
+
+	cmd = "/usr/local/go/bin/go run main.go --doc vp "
+	cmd += uname
+	fmt.Println("command:", cmd)
+
+	dbResponse = web.ExecuteCommand(cmd)
+	dbResponse = strings.TrimSpace(dbResponse)
+	fmt.Println("dbResponse:", dbResponse)
+
+	//changes datatype
+	p := Prescription{PRES: make([]string, 1)}
+	length := 0
+
+	//adds dbResponse to struct Prescription line by line
+	for l := 0; l < len(dbResponse); l = l + 1 {
+		if dbResponse[l] != 10 {
+			p.PRES[length] = p.PRES[length] + string(dbResponse[l])
+		} else {
+			p.PRES = append(p.PRES, "\n")
+			length = length + 1
+		}
+	}
+
+	temp.Execute(response, p)
 }
