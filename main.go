@@ -44,6 +44,11 @@ type Prescription struct {
 	PRES []string
 }
 
+//IStock is new and untested should be a struct that stores Stock information
+type IStock struct {
+	STK []string
+}
+
 var loginInfo = LoginInfo{}
 var eloginInfo = ELoginInfo{}
 
@@ -73,8 +78,6 @@ func DocFunc(response http.ResponseWriter, request *http.Request) {
 	if loginInfo.Username == "" {
 		uname := request.FormValue("uname")
 		dpass := request.FormValue("dpass")
-
-		// cmd0 cd into directory
 
 		cmd = "/usr/local/go/bin/go run main.go --log d "
 		cmd += uname
@@ -140,8 +143,6 @@ func PhaFunc(response http.ResponseWriter, request *http.Request) {
 		uname := request.FormValue("uname")
 		dpass := request.FormValue("dpass")
 
-		// cmd0 cd into directory
-
 		cmd = "/usr/local/go/bin/go run main.go --log p "
 		cmd += uname
 		cmd += " "
@@ -172,7 +173,33 @@ func PhaFunc(response http.ResponseWriter, request *http.Request) {
 func Stock(response http.ResponseWriter, request *http.Request) {
 	temp, _ := template.ParseFiles("stock.html")
 	response.Header().Set("Content-Type", "text/html; charset=utf-8")
-	temp.Execute(response, nil)
+	var cmd, dbResponse string
+	//username from struct
+	uname := loginInfo.Username
+
+	if eloginInfo.Real == true { //should check if employee then act accordingly
+		cmd = "/usr/local/go/bin/go run main.go --pha v vi "
+		cmd += uname
+		fmt.Println("command:", cmd)
+	}
+	dbResponse = web.ExecuteCommand(cmd)
+	dbResponse = strings.TrimSpace(dbResponse)
+	fmt.Println("dbResponse:", dbResponse)
+	//changes datatype
+	s := IStock{STK: make([]string, 1)}
+	length := 0
+
+	//adds dbResponse to struct IStock line by line
+	for l := 0; l < len(dbResponse); l = l + 1 {
+		if dbResponse[l] != 10 {
+			s.STK[length] = s.STK[length] + string(dbResponse[l])
+		} else {
+			s.STK = append(s.STK, "\n")
+			length = length + 1
+		}
+	}
+
+	temp.Execute(response, s) //need to empty struct after use
 }
 
 // Presc HTTP Handler to view prescriptions ///////////massively changed and untested
@@ -180,9 +207,8 @@ func Presc(response http.ResponseWriter, request *http.Request) {
 	temp, _ := template.ParseFiles("prescription.html")
 	response.Header().Set("Content-Type", "text/html; charset=utf-8")
 	var cmd, dbResponse string
-	//values of form text boxes
-	uname := request.FormValue("uname")
-	// cmd0 cd into directory
+	//username from struct
+	uname := loginInfo.Username
 
 	if loginInfo.Doctor == true { //should check if doctor or employee then act accordingly
 		cmd = "/usr/local/go/bin/go run main.go --doc vp "
