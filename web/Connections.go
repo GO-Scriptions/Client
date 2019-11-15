@@ -9,7 +9,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-var remoteUser, remoteHost, port = "ubuntu", "ip", "22"
+var remoteUser, remoteHost, port string
 
 func firstConnect() string {
 	var status string
