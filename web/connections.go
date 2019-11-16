@@ -9,17 +9,16 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-var remoteUser, remoteHost, port string
+var remoteUser, remoteHost string
 
-func firstConnect() string {
+var port = "22"
+
+func FirstConnect() string {
 	var status string
-
-	if remoteUser == "" {
-		fmt.Print("remoteUser: ")
-		fmt.Scan(&remoteUser)
-		fmt.Print("remoteHost: ")
-		fmt.Scan(&remoteHost)
-	}
+        fmt.Print("remoteUser: ")
+        fmt.Scan(&remoteUser)
+        fmt.Print("remoteHost: ")
+        fmt.Scan(&remoteHost)
 
 	// get key
 	signer := getKey()
@@ -45,9 +44,10 @@ func firstConnect() string {
 		session.Close()
 		log.Fatal("Unable to connect to host:", err1)
 	}
-
-	out, _ := session.CombinedOutput("go run main.go")
-	if string(out) == "No Flags Passed" {
+	cmd := "cd go/src/github.com/Database;/usr/local/go/bin/go run main.go"
+	out, _ := session.CombinedOutput(cmd)
+	fmt.Println("output is",string(out))
+	if strings.TrimSpace(string(out)) == "No Flags Passed" {
 		status = "healthy"
 	} else {
 		status = "unhealthy"
@@ -60,7 +60,7 @@ func firstConnect() string {
 }
 
 func getKey() ssh.Signer {
-	key, err := ioutil.ReadFile("./aws_test.pem") //Make sure to rename this!!
+	key, err := ioutil.ReadFile("./ec2.pem") //Make sure to rename this!!
 	if err != nil {
 		log.Fatalf("unable to read key: %v", err)
 	}
@@ -72,9 +72,9 @@ func getKey() ssh.Signer {
 	return signer
 }
 
-func genLogin(cmd string) string {
+func GenLogin(cmd string) string {
 	var response string
-
+	fmt.Println("The command is",cmd)	
 	// configure authentication
 	signer := getKey()
 	sshConfig := &ssh.ClientConfig{
@@ -115,12 +115,6 @@ func genLogin(cmd string) string {
 // connects to ther machine
 func connect() (*ssh.Client, *ssh.Session) {
 	var port = "22"
-	if remoteUser == "" {
-		fmt.Print("remoteUser: ")
-		fmt.Scan(&remoteUser)
-		fmt.Print("remoteHost: ")
-		fmt.Scan(&remoteHost)
-	}
 	// get key
 	key, err := ioutil.ReadFile("./aws_test.pem") //Make sure to rename this!!
 	if err != nil {

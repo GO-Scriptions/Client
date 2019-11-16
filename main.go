@@ -4,9 +4,10 @@ import (
 	"net/http"
 	"html/template"
 	"fmt"
+	"strings"
 
 	//"github.com/GO-Scriptions/Client/web"
-	//"github.com/sdgrandy/project-2/Client"
+	"github.com/project-2/Client/web"
 )
 
 //LoginInfo structure to save your username and occupation
@@ -23,8 +24,6 @@ func index(response http.ResponseWriter, request *http.Request) {
 	temp, _ := template.ParseFiles("web/index.html")
 	response.Header().Set("Content-Type", "text/html; charset=utf-8")
 	temp.Execute(response, nil)
-	//connection := firstConnect()
-	//fmt.Println(connection)
 }
 
 // DocLog HTTP Handler for Doctor Login
@@ -40,7 +39,7 @@ func DocLog(response http.ResponseWriter, request *http.Request) {
 // DocFunc HTTP Handler for after Doctor logs in NEW AND UNTESTED
 func DocFunc(response http.ResponseWriter, request *http.Request) {
 	temp, _ := template.ParseFiles("web/doctor.html")
-	var cmd string
+	var cmd, dbResponse string
 	// if not logged in
 	if(loginInfo.Username == "") {
 		//values of form text boxes
@@ -48,23 +47,24 @@ func DocFunc(response http.ResponseWriter, request *http.Request) {
         	dpass := request.FormValue("dpass")
 
         	// cmd0 cd into directory
-
-        	cmd = "/usr/local/go/bin/go run main.go --log d "
+		cmd =  "cd go/src/github.com/Database;"
+        	cmd += "/usr/local/go/bin/go run main.go --log d "
         	cmd += uname
         	cmd += " "
         	cmd += dpass
         	fmt.Println("command:", cmd)
-		//dbResponse = genLogin(cmd)
-        	//fmt.Println("db response:", dbResponse)
+		dbResponse = web.GenLogin(cmd)
+        	fmt.Println("db response:", dbResponse)
+		// convert response to array of words
+		words := strings.Fields(dbResponse)
 
-        	/*if dbResponse == "true" {
+        	if words[0] == "true" {
+			fmt.Println("logged in")
                 	loginInfo.Doctor = true
                 	loginInfo.Username = uname // change http to doctor.html
         	} else {
-                	loginInfo.Doctor = false
-                	loginInfo.Username = uname
-        	}*/
-		loginInfo.Username = uname
+			fmt.Println("invalid login")
+        	}
 	}
 	temp.Execute(response, loginInfo)
 }
@@ -153,6 +153,9 @@ func Presc(response http.ResponseWriter, request *http.Request) {
 }
 
 func main() {
+	connection := web.FirstConnect()
+        fmt.Println(connection)
+
 	// Sets up a file server in current directory
 	http.HandleFunc("/", index)
 	http.HandleFunc("/doctorlogin", DocLog)
@@ -162,5 +165,5 @@ func main() {
 	/*http.HandleFunc("/employeelogin", web.PhaLog)
 	http.HandleFunc("/employee", PhaFunc)
 	http.HandleFunc("/stock", Stock)*/
-	http.ListenAndServe(":8000", nil)
+	http.ListenAndServe(":80", nil)
 }
