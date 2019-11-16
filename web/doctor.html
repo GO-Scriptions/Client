@@ -14,6 +14,10 @@
 				<br>
 				<!--pretty much the whole page is changed and untested feel free to change as needed-->
 				{{ if .Doctor }}
+				<form action="/logout" method = "POST">
+                                <input type="submit" value="Log Out">
+                                </form>
+	                        <br><br><br>
 				<table class="table table-bordered table-info">
 					<thead class="table-warning" align="center">
 					  <tr>

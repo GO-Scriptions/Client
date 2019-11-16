@@ -20,15 +20,13 @@ var loginInfo = LoginInfo{}
 
 // Index runs the index page
 func index(response http.ResponseWriter, request *http.Request) {
-	loginInfo = LoginInfo{} //log out user if logged in
 	temp, _ := template.ParseFiles("web/index.html")
 	response.Header().Set("Content-Type", "text/html; charset=utf-8")
-	temp.Execute(response, nil)
+	temp.Execute(response, loginInfo)
 }
 
 // DocLog HTTP Handler for Doctor Login
 func DocLog(response http.ResponseWriter, request *http.Request) { 
-	// var dbResponse string
 
 	temp, _ := template.ParseFiles("web/doctorlogin.html")
 	response.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -36,12 +34,18 @@ func DocLog(response http.ResponseWriter, request *http.Request) {
 	temp.Execute(response, loginInfo)
 }
 
+func logout(response http.ResponseWriter, request *http.Request) {
+	temp, _ := template.ParseFiles("web/index.html")
+	loginInfo = LoginInfo{}
+	
+	temp.Execute(response, nil)
+}
 // DocFunc HTTP Handler for after Doctor logs in NEW AND UNTESTED
 func DocFunc(response http.ResponseWriter, request *http.Request) {
 	temp, _ := template.ParseFiles("web/doctor.html")
 	var cmd, dbResponse string
 	// if not logged in
-	if(loginInfo.Username == "") {
+	if !loginInfo.Doctor {
 		//values of form text boxes
         	uname := request.FormValue("uname")
         	dpass := request.FormValue("dpass")
@@ -159,6 +163,7 @@ func main() {
 	// Sets up a file server in current directory
 	http.HandleFunc("/", index)
 	http.HandleFunc("/doctorlogin", DocLog)
+	http.HandleFunc("/logout", logout)
 	http.HandleFunc("/doctor", DocFunc)
 	http.HandleFunc("/docpres", Docpres)
 	http.HandleFunc("/prescription", Presc)
