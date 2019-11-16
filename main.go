@@ -56,7 +56,7 @@ func DocFunc(response http.ResponseWriter, request *http.Request) {
         	cmd += " "
         	cmd += dpass
         	fmt.Println("command:", cmd)
-		dbResponse = web.GenLogin(cmd)
+		dbResponse = web.ExecuteCommand(cmd)
         	fmt.Println("db response:", dbResponse)
 		// convert response to array of words
 		words := strings.Fields(dbResponse)
@@ -74,15 +74,17 @@ func DocFunc(response http.ResponseWriter, request *http.Request) {
 //Docpres sends a new prescription to the database
 func Docpres(response http.ResponseWriter, request *http.Request) {
 	temp, _ := template.ParseFiles("web/docpres.html")
-	var cmd string 
-	//var db_response string
+	var cmd, db_response string
 	fname := request.FormValue("fname")
 	lname := request.FormValue("lname")
 	amount := request.FormValue("amount")
 	prescription := request.FormValue("prescription")
 	// go run main.go
+	cmd =  "cd go/src/github.com/Database;"
 	cmd += "/usr/local/go/bin/go run main.go --doc wp "
 	// add command line arguments
+	cmd += loginInfo.Username //loginInfo uname
+	cmd += " "
 	cmd += fname
 	cmd += " "
 	cmd += lname
@@ -92,9 +94,9 @@ func Docpres(response http.ResponseWriter, request *http.Request) {
 	cmd += prescription
 	fmt.Println("command:", cmd)
 	// get database response
-	//db_response = web.ExecuteCommand(cmd)
-	//db_response = strings.TrimSpace(db_response)
-	//fmt.Println("db response:", db_response)
+	db_response = web.ExecuteCommand(cmd)
+	db_response = strings.TrimSpace(db_response)
+	fmt.Println("db response:", db_response)
 	temp.Execute(response, loginInfo)
 }
 

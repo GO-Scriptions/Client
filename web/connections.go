@@ -20,41 +20,14 @@ func FirstConnect() string {
         fmt.Print("remoteHost: ")
         fmt.Scan(&remoteHost)
 
-	// get key
-	signer := getKey()
-
-	// configure authentication
-	sshConfig := &ssh.ClientConfig{
-		User: remoteUser,
-		Auth: []ssh.AuthMethod{
-			ssh.PublicKeys(signer),
-		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-	}
-
-	// start a client connection to SSH server
-	connection, err0 := ssh.Dial("tcp", remoteHost+":"+port, sshConfig)
-	if err0 != nil {
-		connection.Close()
-		log.Fatal("Unable to dial host:", err0)
-	}
-	// create session
-	session, err1 := connection.NewSession()
-	if err1 != nil {
-		session.Close()
-		log.Fatal("Unable to connect to host:", err1)
-	}
 	cmd := "cd go/src/github.com/Database;/usr/local/go/bin/go run main.go"
-	out, _ := session.CombinedOutput(cmd)
-	fmt.Println("output is",string(out))
-	if strings.TrimSpace(string(out)) == "No Flags Passed" {
+	out := ExecuteCommand(cmd)
+	fmt.Println("output is", out)
+	if strings.TrimSpace(out) == "No Flags Passed" {
 		status = "healthy"
 	} else {
 		status = "unhealthy"
 	}
-
-	defer connection.Close()
-	defer session.Close()
 
 	return status
 }
@@ -72,58 +45,12 @@ func getKey() ssh.Signer {
 	return signer
 }
 
-func GenLogin(cmd string) string {
-	var response string
-	fmt.Println("The command is",cmd)	
-	// configure authentication
-	signer := getKey()
-	sshConfig := &ssh.ClientConfig{
-		User: remoteUser,
-		Auth: []ssh.AuthMethod{
-			ssh.PublicKeys(signer),
-		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-	}
-
-	// start a client connection to SSH server
-	connection, err0 := ssh.Dial("tcp", remoteHost+":"+port, sshConfig)
-	if err0 != nil {
-		connection.Close()
-		log.Fatal("Unable to dial host:", err0)
-	}
-	// create session
-	session, err1 := connection.NewSession()
-	if err1 != nil {
-		session.Close()
-		log.Fatal("Unable to connect to host:", err1)
-	}
-
-	out, err2 := session.CombinedOutput(cmd)
-	if err2 != nil {
-		log.Fatal("Unable to combine output:", err2)
-	}
-
-	response = strings.TrimSpace(string(out))
-
-	defer connection.Close()
-	defer session.Close()
-	return response
-}
-
-/////all below is added from seths code new and untested after my edits
 
 // connects to ther machine
 func connect() (*ssh.Client, *ssh.Session) {
 	var port = "22"
 	// get key
-	key, err := ioutil.ReadFile("./aws_test.pem") //Make sure to rename this!!
-	if err != nil {
-		log.Fatalf("unable to read key: %v", err)
-	}
-	signer, err := ssh.ParsePrivateKey(key)
-	if err != nil {
-		log.Fatalf("unable to parse key: %v", err)
-	}
+	signer := getKey()
 
 	// configure authentication
 	sshConfig := &ssh.ClientConfig{
