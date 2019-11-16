@@ -5,8 +5,7 @@ import (
 	"html/template"
 	"fmt"
 	"strings"
-
-	//"github.com/GO-Scriptions/Client/web"
+	
 	"github.com/project-2/Client/web"
 )
 
@@ -30,20 +29,20 @@ func DocLog(response http.ResponseWriter, request *http.Request) {
 
 	temp, _ := template.ParseFiles("web/doctorlogin.html")
 	response.Header().Set("Content-Type", "text/html; charset=utf-8")
-
 	temp.Execute(response, loginInfo)
 }
 
 func logout(response http.ResponseWriter, request *http.Request) {
 	temp, _ := template.ParseFiles("web/index.html")
-	loginInfo = LoginInfo{}
-	
+
+    	loginInfo = LoginInfo{}
 	temp.Execute(response, nil)
 }
 // DocFunc HTTP Handler for after Doctor logs in NEW AND UNTESTED
 func DocFunc(response http.ResponseWriter, request *http.Request) {
 	temp, _ := template.ParseFiles("web/doctor.html")
 	var cmd, dbResponse string
+
 	// if not logged in
 	if !loginInfo.Doctor {
 		//values of form text boxes
@@ -63,7 +62,6 @@ func DocFunc(response http.ResponseWriter, request *http.Request) {
 		words := strings.Fields(dbResponse)
 
         	if words[0] == "true" {
-			fmt.Println("logged in")
                 	loginInfo.Doctor = true
                 	loginInfo.Username = uname // change http to doctor.html
         	} else {
@@ -99,26 +97,6 @@ func Docpres(response http.ResponseWriter, request *http.Request) {
 	//fmt.Println("db response:", db_response)
 	temp.Execute(response, loginInfo)
 }
-// PhaLog HTTP Handler for Pharmasicst Login
-/*func PhaLog(response http.ResponseWriter, request *http.Request) {
-	temp, _ := template.ParseFiles("html/employeelogin.html")
-	response.Header().Set("Content-Type", "text/html; charset=utf-8")
-	temp.Execute(response, nil)
-}*/
-
-// PhaFunc HTTP Handler for after Pharmasicst logs in
-/*func PhaFunc(response http.ResponseWriter, request *http.Request) {
-	temp, _ := template.ParseFiles("html/employee.html")
-	response.Header().Set("Content-Type", "text/html; charset=utf-8")
-	temp.Execute(response, nil)
-}*/
-
-// Stock HTTP Hander for restocking the pharamacy
-/*func Stock(response http.ResponseWriter, request *http.Request) {
-	temp, _ := template.ParseFiles("html/stock.html")
-	response.Header().Set("Content-Type", "text/html; charset=utf-8")
-	temp.Execute(response, nil)
-}*/
 
 // Presc HTTP Handler to view prescriptions ///////////massively changed and untested
 func Presc(response http.ResponseWriter, request *http.Request) {
@@ -167,8 +145,5 @@ func main() {
 	http.HandleFunc("/doctor", DocFunc)
 	http.HandleFunc("/docpres", Docpres)
 	http.HandleFunc("/prescription", Presc)
-	/*http.HandleFunc("/employeelogin", web.PhaLog)
-	http.HandleFunc("/employee", PhaFunc)
-	http.HandleFunc("/stock", Stock)*/
 	http.ListenAndServe(":80", nil)
 }
