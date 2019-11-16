@@ -33,13 +33,13 @@ func FirstConnect() string {
 }
 
 func getKey() ssh.Signer {
-	key, err := ioutil.ReadFile("./ec2.pem") //Make sure to rename this!!
-	if err != nil {
-		log.Fatalf("unable to read key: %v", err)
+	key, err0 := ioutil.ReadFile("./ec2.pem") 
+	if err0 != nil {
+		log.Fatalf("unable to read key: %v", err0)
 	}
-	signer, err := ssh.ParsePrivateKey(key)
-	if err != nil {
-		log.Fatalf("unable to parse key: %v", err)
+	signer, err1 := ssh.ParsePrivateKey(key)
+	if err1 != nil {
+		log.Fatalf("unable to parse key: %v", err1)
 	}
 
 	return signer
@@ -48,7 +48,6 @@ func getKey() ssh.Signer {
 
 // connects to ther machine
 func connect() (*ssh.Client, *ssh.Session) {
-	var port = "22"
 	// get key
 	signer := getKey()
 
@@ -62,16 +61,16 @@ func connect() (*ssh.Client, *ssh.Session) {
 	}
 
 	// start a client connection to SSH server
-	connection, err := ssh.Dial("tcp", remoteHost+":"+port, sshConfig)
-	if err != nil {
+	connection, err0 := ssh.Dial("tcp", remoteHost+":"+port, sshConfig)
+	if err0 != nil {
 		connection.Close()
-		panic(err)
+		panic(err0)
 	}
 	// create session
-	session, err := connection.NewSession()
-	if err != nil {
+	session, err1 := connection.NewSession()
+	if err1 != nil {
 		session.Close()
-		panic(err)
+		panic(err1)
 	}
 
 	return connection, session
@@ -82,7 +81,10 @@ func ExecuteCommand(cmd string) string {
 	//connect to remote host
 	connection, session := connect()
 	// execute go program on remote host and get its combined standard output and standard error
-	out, _ := session.CombinedOutput(cmd)
+	out, err := session.CombinedOutput(cmd)
+	if err != nil {
+		log.Fatal("Unable to get combined output:", err)
+	}
 	defer connection.Close()
 	defer session.Close()
 	return string(out)
