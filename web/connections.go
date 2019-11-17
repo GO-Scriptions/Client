@@ -13,14 +13,15 @@ var remoteUser, remoteHost string
 
 var port = "22"
 
+//FirstConnect runs the initial connection
 func FirstConnect() string {
 	var status string
-        fmt.Print("remoteUser: ")
-        fmt.Scan(&remoteUser)
-        fmt.Print("remoteHost: ")
-        fmt.Scan(&remoteHost)
+	fmt.Print("remoteUser: ")
+	fmt.Scan(&remoteUser)
+	fmt.Print("remoteHost: ")
+	fmt.Scan(&remoteHost)
 
-	cmd := "cd go/src/github.com/Database;/usr/local/go/bin/go run main.go"
+	cmd := "cd go/src/github.com/Database;/usr/local/go/bin/go run main.go" //change to match your path
 	out := ExecuteCommand(cmd)
 	fmt.Println("output is", out)
 	if strings.TrimSpace(out) == "No Flags Passed" {
@@ -33,7 +34,7 @@ func FirstConnect() string {
 }
 
 func getKey() ssh.Signer {
-	key, err0 := ioutil.ReadFile("./ec2.pem") 
+	key, err0 := ioutil.ReadFile("./ec2.pem") //change to match your key name and ensure its in the correct folder
 	if err0 != nil {
 		log.Fatalf("unable to read key: %v", err0)
 	}
@@ -44,7 +45,6 @@ func getKey() ssh.Signer {
 
 	return signer
 }
-
 
 // connects to ther machine
 func connect() (*ssh.Client, *ssh.Session) {
