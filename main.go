@@ -14,7 +14,9 @@ type LoginInfo struct {
 	Username string
 	Doctor   bool
 }
-
+type Prescription struct {
+	PRES []string
+}
 var loginInfo = LoginInfo{}
 
 // Index runs the index page
@@ -102,38 +104,39 @@ func Docpres(response http.ResponseWriter, request *http.Request) {
 
 // Presc HTTP Handler to view prescriptions ///////////massively changed and untested
 func Presc(response http.ResponseWriter, request *http.Request) {
-	temp, _ := template.ParseFiles("prescription.html")
+	temp, _ := template.ParseFiles("web/prescription.html")
 	response.Header().Set("Content-Type", "text/html; charset=utf-8")
-	var cmd string
+	var cmd, dbResponse string
 	//var dbResponse string
 	//values of form text boxes
-	uname := request.FormValue("uname")
+	uname := loginInfo.Username
 	// cmd0 cd into directory
-
-	cmd = "/usr/local/go/bin/go run main.go --doc vp "
+	
+	cmd =  "cd go/src/github.com/Database;"
+	cmd += "/usr/local/go/bin/go run main.go --doc vp "
 	cmd += uname
 	fmt.Println("command:", cmd)
 
-	/*dbResponse = web.ExecuteCommand(cmd)
+	dbResponse = web.ExecuteCommand(cmd)
 	dbResponse = strings.TrimSpace(dbResponse)
-	fmt.Println("dbResponse:", dbResponse)*/
+	fmt.Println("dbResponse:", dbResponse)
 
 	//changes datatype
-	/*p := Prescription{PRES: make([]string, 1)}
-	length := 0*/
+	p := Prescription{PRES: make([]string, 1)}
+	length := 0
 
 	//adds dbResponse to struct Prescription line by line
-	/*for l := 0; l < len(dbResponse); l = l + 1 {
+	for l := 0; l < len(dbResponse); l = l + 1 {
 		if dbResponse[l] != 10 {
 			p.PRES[length] = p.PRES[length] + string(dbResponse[l])
 		} else {
 			p.PRES = append(p.PRES, "\n")
 			length = length + 1
 		}
-	}*/
+	}
 
 	//temp.Execute(response, p)
-	temp.Execute(response, nil)
+	temp.Execute(response, p)
 }
 
 func main() {
